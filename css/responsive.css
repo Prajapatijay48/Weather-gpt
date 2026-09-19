@@ -1,0 +1,396 @@
+/* ==========================================================================
+   WEATHER-GPT — RESPONSIVE DESIGN SYSTEM & VIEWPORT OPTIMIZATIONS
+   Strict adherence to non-negotiable rules:
+   - Zero horizontal page overflow
+   - Fluid auto-wrapping, no text collisions
+   - Optimized for 320px, 360px, 375px, 390px, 414px, 430px, 768px, 820px, 1024px, 1280px, 1440px
+   ========================================================================== */
+
+/* 1. Large Desktops (1280px - 1440px+) */
+@media (min-width: 1280px) {
+  .app-container {
+    padding: 0 32px;
+  }
+}
+
+/* 2. Laptops & Standard Desktops (1024px - 1279px) */
+@media (max-width: 1279px) {
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .forecast-analytics-grid {
+    grid-template-columns: 1fr 1.2fr;
+    gap: 20px;
+  }
+
+  .map-gpt-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .map-container-box {
+    height: 440px;
+  }
+
+  .gpt-card {
+    height: 520px;
+  }
+}
+
+/* 3. Tablets & Small Laptops (768px - 1023px) */
+@media (max-width: 1023px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .hero-content {
+    align-items: flex-start;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .forecast-analytics-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .chart-wrapper {
+    height: 300px;
+  }
+
+  .map-gpt-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .map-container-box {
+    height: 380px;
+  }
+
+  .gpt-card {
+    height: 520px;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+
+  /* Desktop nav hidden, show mobile toggle button */
+  .nav-menu {
+    display: none;
+  }
+
+  .mobile-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* 4. Large Mobile Phones & Phablets (431px - 767px) */
+@media (max-width: 767px) {
+  .navbar {
+    padding: 0 16px;
+    height: 64px;
+  }
+
+  .app-container {
+    padding: 0 16px;
+  }
+
+  .brand-logo {
+    font-size: 1.15rem;
+    gap: 8px;
+  }
+
+  .brand-icon-wrapper {
+    width: 34px;
+    height: 34px;
+  }
+
+  .hero-section {
+    padding: 28px 0 24px 0;
+  }
+
+  .hero-weather-card {
+    padding: 20px;
+  }
+
+  .hero-temp-display {
+    font-size: 3rem;
+  }
+
+  .hero-weather-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .search-wrapper {
+    width: 100%;
+  }
+
+  .search-input-box {
+    padding: 6px 8px 6px 14px;
+  }
+
+  .search-btn {
+    padding: 8px 14px;
+    font-size: 0.825rem;
+  }
+
+  .weekly-day-info {
+    width: 80px;
+  }
+
+  .weekly-temps-right {
+    width: 75px;
+    gap: 8px;
+  }
+
+  .weekly-weather-center {
+    justify-content: flex-start;
+    padding-left: 8px;
+  }
+
+  .map-container-box {
+    height: 320px;
+  }
+
+  .gpt-card {
+    height: 480px;
+    padding: 16px;
+  }
+
+  .chat-bubble-wrap {
+    max-width: 95%;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+/* 5. Standard Mobile (360px - 430px) */
+@media (max-width: 430px) {
+  .app-container {
+    padding: 0 12px;
+  }
+
+  .hero-pill {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+
+  .hero-title {
+    font-size: 1.85rem;
+  }
+
+  .hero-description {
+    font-size: 0.925rem;
+  }
+
+  .chips-container {
+    gap: 6px;
+  }
+
+  .city-chip {
+    font-size: 0.725rem;
+    padding: 4px 10px;
+  }
+
+  .hero-temp-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .hero-condition-wrap {
+    text-align: left;
+    align-items: flex-start;
+  }
+
+  .alert-banner {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .alert-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .hourly-card {
+    padding: 16px 12px;
+  }
+
+  .weekly-card {
+    padding: 16px 12px;
+  }
+
+  .weekly-row {
+    padding: 8px 10px;
+  }
+
+  .weekly-cond-text {
+    display: none; /* Hide verbose label on very narrow screens to prevent overlap */
+  }
+
+  .chart-card {
+    padding: 16px 12px;
+  }
+
+  .chart-wrapper {
+    height: 250px;
+  }
+
+  .map-card {
+    padding: 16px 12px;
+  }
+
+  .map-container-box {
+    height: 320px;
+  }
+
+  .map-layer-switcher {
+    width: 100%;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .map-station-badge {
+    padding: 6px 10px;
+    max-width: 70%;
+  }
+
+  .map-station-coords {
+    display: none;
+  }
+
+  .radar-controller-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .radar-timeline-steps {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .gpt-card {
+    height: 440px;
+  }
+}
+
+/* 6. Ultra-compact / Small Mobile (320px - 359px) */
+@media (max-width: 359px) {
+  .navbar {
+    padding: 0 10px;
+  }
+
+  .brand-badge {
+    display: none;
+  }
+
+  .hero-title {
+    font-size: 1.65rem;
+  }
+
+  .unit-btn {
+    padding: 4px 8px;
+    font-size: 0.725rem;
+  }
+
+  .search-input-box {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .search-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .metric-card {
+    padding: 14px;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+
+  .hourly-item {
+    min-width: 72px;
+    padding: 10px 6px;
+  }
+
+  .gpt-input-form {
+    padding: 4px 8px;
+  }
+
+  .suggestion-chip {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+}
+
+/* Responsive Rules for Login Modal & Heavy Rain Alert */
+@media (max-width: 767px) {
+  .emergency-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .protocols-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .login-modal-card {
+    padding: 24px 18px 20px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .emergency-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .emergency-headline-section {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .emergency-actions {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+}
+
+/* Global Overflow Protection */
+body, html, #root, .app-container, .hero-section, .metrics-grid, .map-gpt-grid, .forecast-analytics-grid, .alerts-master-wrapper, .heavy-rain-emergency-banner {
+  max-width: 100%;
+  overflow-x: clip;
+}
