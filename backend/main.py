@@ -8,9 +8,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-from .config import settings
-from .routes import weather_router, chat_router, alerts_router, locations_router
-from .services import cache_service, database_service
+import sys
+import os
+
+_backend_dir = os.path.dirname(os.path.abspath(__file__))
+_root_dir = os.path.dirname(_backend_dir)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+if _root_dir not in sys.path:
+    sys.path.insert(0, _root_dir)
+
+try:
+    from backend.config import settings
+    from backend.routes import weather_router, chat_router, alerts_router, locations_router
+    from backend.services import cache_service, database_service
+except (ImportError, ValueError):
+    try:
+        from .config import settings
+        from .routes import weather_router, chat_router, alerts_router, locations_router
+        from .services import cache_service, database_service
+    except (ImportError, ValueError):
+        from config import settings
+        from routes import weather_router, chat_router, alerts_router, locations_router
+        from services import cache_service, database_service
 
 # Configure Structured Logging
 logging.basicConfig(

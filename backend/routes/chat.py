@@ -4,8 +4,17 @@ Context-aware AI meteorological conversational assistant.
 """
 import logging
 from fastapi import APIRouter, HTTPException
-from ..models import ChatRequest, ChatResponse
-from ..services import ai_service
+
+try:
+    from backend.models import ChatRequest, ChatResponse
+    from backend.services import ai_service
+except (ImportError, ValueError):
+    try:
+        from ..models import ChatRequest, ChatResponse
+        from ..services import ai_service
+    except (ImportError, ValueError):
+        from models import ChatRequest, ChatResponse
+        from services import ai_service
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +38,8 @@ async def ask_weather_gpt(request: ChatRequest):
         response = await ai_service.generate_response(
             user_message=request.message.strip(),
             active_location=request.location,
-            conversation_history=request.conversation_history
+            conversation_history=request.conversation_history,
+            persona=request.persona
         )
         return response
     except HTTPException:

@@ -324,9 +324,12 @@ const Navbar = ({ unit, setUnit, activeNav, setActiveNav, currentUser, onOpenLog
                 <span className="signin-tag">Sign In</span>
               </button>
             ) : (
-              <div className="user-profile-badge" title={`Signed in as ${currentUser.email || currentUser.name}`}>
+              <div className="user-profile-badge" title={`Signed in as ${currentUser.email || currentUser.name} (${currentUser.role || 'Meteorologist'})`}>
                 <div className="user-online-dot" />
-                <span className="user-name-text">{currentUser.name}</span>
+                <div className="user-info-stack">
+                  <span className="user-name-text">{currentUser.name}</span>
+                  <span className="user-persona-tag">{currentUser.role || "Meteorologist"}</span>
+                </div>
                 <button
                   type="button"
                   className="btn-nav-logout"
@@ -399,14 +402,46 @@ const Navbar = ({ unit, setUnit, activeNav, setActiveNav, currentUser, onOpenLog
 
 // --------------------------------------------------------------------------
 // --------------------------------------------------------------------------
-// 2B. Direct Login Modal Component (Compact, Compulsory, Clean)
+// 2B. Direct Login Modal Component (Compact, Compulsory, Clean with Personas)
 // --------------------------------------------------------------------------
+const PERSONAS = [
+  {
+    id: "farmer",
+    label: "Farmer (Kisan)",
+    icon: "🌾",
+    badge: "Agri & Crops",
+    desc: "Crop rain alerts & irrigation"
+  },
+  {
+    id: "traveler",
+    label: "Traveler",
+    icon: "✈️",
+    badge: "Trips & Commute",
+    desc: "Transit delays & travel advice"
+  },
+  {
+    id: "athlete",
+    label: "Outdoor Athlete",
+    icon: "🏃",
+    badge: "Fitness & Sport",
+    desc: "UV index, run timing & workout"
+  },
+  {
+    id: "meteorologist",
+    label: "Meteorologist",
+    icon: "🔬",
+    badge: "Deep Radar",
+    desc: "Doppler telemetry & pressure"
+  }
+];
+
 const LoginModal = ({ isOpen, onLogin }) => {
   if (!isOpen) return null;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [selectedPersona, setSelectedPersona] = useState("farmer");
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState("");
 
@@ -420,10 +455,12 @@ const LoginModal = ({ isOpen, onLogin }) => {
     }
 
     const displayName = name.trim() || (email ? email.split("@")[0] : "Forecaster");
+    const personaObj = PERSONAS.find((p) => p.id === selectedPersona) || PERSONAS[0];
     onLogin({
       name: displayName,
       email: email.trim(),
-      role: "Lead Meteorologist",
+      role: personaObj.label,
+      roleId: personaObj.id,
       isGuest: false
     });
   };
@@ -488,7 +525,7 @@ const LoginModal = ({ isOpen, onLogin }) => {
             />
           </div>
 
-          <div className="form-field" style={{ marginBottom: "14px" }}>
+          <div className="form-field" style={{ marginBottom: "12px" }}>
             <label className="field-label">Password</label>
             <input
               type="password"
@@ -497,6 +534,36 @@ const LoginModal = ({ isOpen, onLogin }) => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+          </div>
+
+          {/* Persona / Profile Selector */}
+          <div className="form-field" style={{ marginBottom: "14px" }}>
+            <label className="field-label" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <span>Select Profile / Persona</span>
+              <span style={{ fontSize: "0.72rem", color: "var(--accent-cyan)", fontWeight: 600 }}>Customizes Weather-GPT</span>
+            </label>
+            <div className="persona-pill-grid">
+              {PERSONAS.map((p) => {
+                const isSelected = selectedPersona === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`persona-pill ${isSelected ? "active" : ""}`}
+                    onClick={() => setSelectedPersona(p.id)}
+                  >
+                    <span className="persona-pill-icon">{p.icon}</span>
+                    <div className="persona-pill-text">
+                      <div className="persona-pill-title">{p.label}</div>
+                      <div className="persona-pill-desc">{p.desc}</div>
+                    </div>
+                    {isSelected && (
+                      <span className="persona-check-indicator">✓</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <button type="submit" className="btn-auth-primary" style={{ padding: "10px 16px" }}>
@@ -1573,12 +1640,31 @@ const WeatherMap = ({ currentCity, convertTemp, userLocation, onLocateUser }) =>
 // --------------------------------------------------------------------------
 // 10. Weather-GPT AI Assistant Chat Component
 // --------------------------------------------------------------------------
-const WeatherGPT = ({ currentCity, unit }) => {
-  const [messages, setMessages] = useState([
+const WeatherGPT = ({ currentCity, unit, currentUser }) => {
+  const userPersona = currentUser?.role || "Lead Meteorologist";
+  const userRoleKey = (currentUser?.roleId || "").toLowerCase() ||
+    (userPersona.toLowerCase().includes("farmer") ? "farmer" :
+     userPersona.toLowerCase().includes("travel") ? "traveler" :
+     userPersona.toLowerCase().includes("athlete") ? "athlete" : "meteorologist");
+
+  const buildInitialGreeting = () => {
+    const tempDisplay = unit === "F" ? Math.round((currentCity.current.temp * 9) / 5 + 32) : currentCity.current.temp;
+    const userName = currentUser?.name || "Forecaster";
+    if (userRoleKey === "farmer") {
+      return `🌾 **Ram Ram / Namaste ${userName}!** I am **Weather-GPT**, your Agricultural & Crop Climate Advisor.\n\nCurrently monitoring **${currentCity.name}** at **${tempDisplay}°${unit}** with ${currentCity.current.condition.toLowerCase()}. Rain probability is **${currentCity.current.rain_prob || 0}%**.\n\nAsk me about irrigation timing, crop spray safety, or today's rain outlook!`;
+    } else if (userRoleKey === "traveler") {
+      return `✈️ **Welcome ${userName}!** I am **Weather-GPT**, your Travel & Commute Weather Guide.\n\nCurrently monitoring **${currentCity.name}** at **${tempDisplay}°${unit}** with ${currentCity.current.condition.toLowerCase()}.\n\nAsk me about packing recommendations, flight or road delay forecasts, and umbrella needs!`;
+    } else if (userRoleKey === "athlete") {
+      return `🏃 **Hey ${userName}!** I am **Weather-GPT**, your Outdoor Fitness & Athletic Advisor.\n\nCurrently monitoring **${currentCity.name}** at **${tempDisplay}°${unit}**, UV Index **${currentCity.current.uv_index || 3}**.\n\nAsk me about optimal workout hours, heat index, and hydration guidance!`;
+    }
+    return `👋 Hello **${userName}**! I am **Weather-GPT**, your Doppler climate assistant.\n\nCurrently monitoring **${currentCity.name}** at **${tempDisplay}°${unit}** with ${currentCity.current.condition.toLowerCase()}. What would you like to know about today's forecast?`;
+  };
+
+  const [messages, setMessages] = useState(() => [
     {
       id: "m-init-1",
       sender: "assistant",
-      text: `👋 Hello! I am **Weather-GPT**, your intelligent climate assistant.\n\nCurrently monitoring **${currentCity.name}** at **${unit === "F" ? Math.round((currentCity.current.temp * 9) / 5 + 32) : currentCity.current.temp}°${unit}** with ${currentCity.current.condition.toLowerCase()}. What would you like to know about today's forecast?`,
+      text: buildInitialGreeting(),
       time: "Just now"
     }
   ]);
@@ -1586,6 +1672,21 @@ const WeatherGPT = ({ currentCity, unit }) => {
   const [inputQuery, setInputQuery] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Update initial greeting when persona or city changes (if user has not started conversation)
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length <= 1) {
+        return [{
+          id: `m-init-${Date.now()}`,
+          sender: "assistant",
+          text: buildInitialGreeting(),
+          time: "Just now"
+        }];
+      }
+      return prev;
+    });
+  }, [currentUser?.name, currentUser?.role, currentCity.name, unit]);
 
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
@@ -1596,14 +1697,42 @@ const WeatherGPT = ({ currentCity, unit }) => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const promptSuggestions = [
-    "Will it rain today?",
-    "What should I wear today?",
-    "Is it a good time for outdoor exercise?",
-    "Should I carry an umbrella?",
-    "How hot will it be tomorrow?",
-    "What is the best time to go outside?"
-  ];
+  // Dynamic Prompt Suggestions based on Persona
+  const promptSuggestions = useMemo(() => {
+    if (userRoleKey === "farmer") {
+      return [
+        `Will it rain today in ${currentCity.name}?`,
+        "Kya aaj khet me sinchai (paani) karna chahiye?",
+        "Is today safe for crop spraying or harvesting?",
+        "Next 3 days me barish ka kya chance hai?",
+        "Khet ki faslon ke liye humidity aur hawa kaisa hai?"
+      ];
+    } else if (userRoleKey === "traveler") {
+      return [
+        "Should I carry an umbrella today?",
+        `Is it safe to travel or commute in ${currentCity.name}?`,
+        "What clothes should I pack for this trip?",
+        "Will rain disrupt evening flights or roads?",
+        "Tomorrow weather outlook for traveling"
+      ];
+    } else if (userRoleKey === "athlete") {
+      return [
+        "Is it a good time for outdoor running/exercise?",
+        "What is the best hour for workout today?",
+        "How high is the UV Index and heat stress today?",
+        "Current air quality (AQI) for jogging",
+        "Will evening rain interfere with outdoor sports?"
+      ];
+    }
+    return [
+      `Will it rain today in ${currentCity.name}?`,
+      "What should I wear today?",
+      "Detailed 24-hour precipitation trajectory",
+      "Should I carry an umbrella today?",
+      "How hot will it be tomorrow?",
+      "Atmospheric pressure & wind velocity breakdown"
+    ];
+  }, [userRoleKey, currentCity.name]);
 
   const handleSendMessage = async (textToSend) => {
     const query = textToSend || inputQuery;
@@ -1620,13 +1749,14 @@ const WeatherGPT = ({ currentCity, unit }) => {
     setInputQuery("");
     setIsTyping(true);
 
-    // 1. Attempt to query FastAPI Backend /api/chat
+    // 1. Attempt to query FastAPI Backend /api/chat with persona
     try {
       if (window.WeatherAPI && typeof window.WeatherAPI.askChat === "function") {
         const data = await window.WeatherAPI.askChat(
           query.trim(),
           currentCity?.name || "Ahmedabad",
-          messages
+          messages,
+          userPersona
         );
 
         if (data && data.message) {
@@ -1702,7 +1832,10 @@ const WeatherGPT = ({ currentCity, unit }) => {
             <LucideIcon name="bot" size={22} color="#FFFFFF" />
           </div>
           <div>
-            <h3 style={{ fontSize: "1.05rem", fontWeight: 700 }}>Weather-GPT</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 700 }}>Weather-GPT</h3>
+              <span className="gpt-persona-pill">{currentUser?.role || "Meteorologist"}</span>
+            </div>
             <div className="gpt-status-badge">
               <span className="status-dot" />
               <span>Telemetry Synchronized • Station: {currentCity.name}</span>

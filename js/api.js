@@ -78,7 +78,7 @@
     /**
      * Submit question to context-aware WeatherGPT AI
      */
-    async askChat(message, location, conversationHistory = []) {
+    async askChat(message, location, conversationHistory = [], persona = "Meteorologist") {
       if (!message || !message.trim()) {
         throw new Error("User message cannot be blank.");
       }
@@ -91,8 +91,10 @@
       const payload = {
         message: message.trim(),
         location: location || "Ahmedabad",
-        conversation_history: historyPayload
+        conversation_history: historyPayload,
+        persona: persona || "Meteorologist"
       };
+
 
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",

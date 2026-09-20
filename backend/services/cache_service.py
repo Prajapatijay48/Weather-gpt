@@ -8,7 +8,14 @@ import json
 import time
 import logging
 from typing import Optional, Any
-from ..config import settings
+try:
+    from backend.config import settings
+except (ImportError, ValueError):
+    try:
+        from ..config import settings
+    except (ImportError, ValueError):
+        from config import settings
+
 
 logger = logging.getLogger(__name__)
 

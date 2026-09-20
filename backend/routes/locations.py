@@ -4,7 +4,15 @@ Returns registered weather observation stations and coordinates for Leaflet map 
 """
 from fastapi import APIRouter
 from typing import List, Dict, Any
-from ..services import database_service
+
+try:
+    from backend.services import database_service
+except (ImportError, ValueError):
+    try:
+        from ..services import database_service
+    except (ImportError, ValueError):
+        from services import database_service
+
 
 router = APIRouter(prefix="/api/locations", tags=["Locations"])
 

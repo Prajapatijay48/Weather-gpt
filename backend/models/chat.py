@@ -15,6 +15,8 @@ class ChatRequest(BaseModel):
         default_factory=list,
         description="Previous turns of conversation for follow-up questions"
     )
+    persona: Optional[str] = Field("Meteorologist", description="User persona/role: Farmer, Traveler, Athlete, Meteorologist")
+
 
 
 class ChatResponse(BaseModel):

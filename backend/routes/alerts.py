@@ -4,8 +4,17 @@ Returns active meteorological alerts and advisories computed by the Decision Eng
 """
 from fastapi import APIRouter, Query, HTTPException
 from typing import List, Optional
-from ..models import AlertModel
-from ..services import weather_service
+
+try:
+    from backend.models import AlertModel
+    from backend.services import weather_service
+except (ImportError, ValueError):
+    try:
+        from ..models import AlertModel
+        from ..services import weather_service
+    except (ImportError, ValueError):
+        from models import AlertModel
+        from services import weather_service
 
 router = APIRouter(prefix="/api/alerts", tags=["Alerts"])
 

@@ -7,7 +7,14 @@ import httpx
 import logging
 from typing import Dict, Any, Optional, Tuple
 from datetime import datetime
-from .base import WeatherProvider
+try:
+    from .base import WeatherProvider
+except (ImportError, ValueError):
+    try:
+        from backend.providers.base import WeatherProvider
+    except (ImportError, ValueError):
+        from base import WeatherProvider
+
 
 logger = logging.getLogger(__name__)
 

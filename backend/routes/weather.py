@@ -5,8 +5,17 @@ Supports both query parameter (?city=...) and path parameter (/{city}).
 """
 from fastapi import APIRouter, HTTPException, Query, Path
 from typing import Optional
-from ..models import WeatherResponseModel
-from ..services import weather_service
+
+try:
+    from backend.models import WeatherResponseModel
+    from backend.services import weather_service
+except (ImportError, ValueError):
+    try:
+        from ..models import WeatherResponseModel
+        from ..services import weather_service
+    except (ImportError, ValueError):
+        from models import WeatherResponseModel
+        from services import weather_service
 
 router = APIRouter(prefix="/api/weather", tags=["Weather"])
 

@@ -1878,7 +1878,7 @@ button {
 .login-modal-card {
   position: relative;
   width: 92%;
-  max-width: 380px;
+  max-width: 430px;
   margin: 40px auto;
   background: #0E1626;
   border: 1px solid rgba(56, 189, 248, 0.3);
@@ -2128,6 +2128,109 @@ button {
 
 .link-switch-auth:hover {
   text-decoration: underline;
+}
+
+/* ==========================================================================
+   PERSONA / PROFILE SELECTOR & USER BADGES
+   ========================================================================== */
+.persona-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.persona-pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.persona-pill:hover {
+  background: rgba(56, 189, 248, 0.06);
+  border-color: rgba(56, 189, 248, 0.3);
+  transform: translateY(-1px);
+}
+
+.persona-pill.active {
+  background: rgba(2, 132, 199, 0.16);
+  border-color: var(--accent-sky);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.persona-pill-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.persona-pill-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.persona-pill-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.persona-pill.active .persona-pill-title {
+  color: var(--accent-sky);
+}
+
+.persona-pill-desc {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.persona-check-indicator {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent-sky);
+}
+
+/* User Info Stack in Navbar */
+.user-info-stack {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.user-persona-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent-sky);
+  text-transform: capitalize;
+}
+
+/* Persona pill inside WeatherGPT title */
+.gpt-persona-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-sky);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
 }
 
 /* ==========================================================================

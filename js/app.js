@@ -236,14 +236,15 @@ function mountWeatherApp() {
         localStorage.setItem("weather_gpt_user", JSON.stringify(user));
       } catch (e) {}
 
-      setToastMessage(`Welcome, ${user.name}! Detecting your location...`);
+      const rolePrefix = user.role ? `${user.role} ` : "";
+      setToastMessage(`Welcome, ${rolePrefix}${user.name}! Detecting your location...`);
 
       // Track login location and immediately display that city's live weather
       try {
         const loc = await detectUserLocation();
         if (loc && loc.city) {
           await handleCitySelect(loc.city);
-          setToastMessage(`Welcome, ${user.name}! Live location & radar synced to ${loc.city}.`);
+          setToastMessage(`Welcome, ${rolePrefix}${user.name}! Live location & radar synced to ${loc.city}.`);
         }
       } catch (locErr) {
         console.warn("Location tracking error:", locErr);
@@ -462,6 +463,7 @@ function mountWeatherApp() {
             <WeatherGPT
               currentCity={currentCity}
               unit={unit}
+              currentUser={currentUser}
             />
           </div>
 

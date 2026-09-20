@@ -7,19 +7,55 @@ from typing import Optional, Dict, Any, List
 import logging
 from datetime import datetime, timezone
 
-from ..providers import WeatherProvider, OpenMeteoProvider
-from ..utils import validate_weather_payload, normalize_current_weather, wmo_to_condition
-from ..models import (
-    LocationModel,
-    CurrentWeatherModel,
-    HourlyForecastItem,
-    DailyForecastItem,
-    AlertModel,
-    WeatherResponseModel,
-)
-from .cache_service import cache_service
-from .database_service import database_service
-from .decision_engine import decision_engine
+try:
+    from backend.providers import WeatherProvider, OpenMeteoProvider
+    from backend.utils import validate_weather_payload, normalize_current_weather, wmo_to_condition
+    from backend.models import (
+        LocationModel,
+        CurrentWeatherModel,
+        HourlyForecastItem,
+        DailyForecastItem,
+        AlertModel,
+        WeatherResponseModel,
+    )
+    from backend.services.cache_service import cache_service
+    from backend.services.database_service import database_service
+    from backend.services.decision_engine import decision_engine
+except (ImportError, ValueError):
+    try:
+        from ..providers import WeatherProvider, OpenMeteoProvider
+        from ..utils import validate_weather_payload, normalize_current_weather, wmo_to_condition
+        from ..models import (
+            LocationModel,
+            CurrentWeatherModel,
+            HourlyForecastItem,
+            DailyForecastItem,
+            AlertModel,
+            WeatherResponseModel,
+        )
+        from .cache_service import cache_service
+        from .database_service import database_service
+        from .decision_engine import decision_engine
+    except (ImportError, ValueError):
+        from providers import WeatherProvider, OpenMeteoProvider
+        from utils import validate_weather_payload, normalize_current_weather, wmo_to_condition
+        from models import (
+            LocationModel,
+            CurrentWeatherModel,
+            HourlyForecastItem,
+            DailyForecastItem,
+            AlertModel,
+            WeatherResponseModel,
+        )
+        try:
+            from services.cache_service import cache_service
+            from services.database_service import database_service
+            from services.decision_engine import decision_engine
+        except (ImportError, ValueError):
+            from cache_service import cache_service
+            from database_service import database_service
+            from decision_engine import decision_engine
+
 
 logger = logging.getLogger(__name__)
 

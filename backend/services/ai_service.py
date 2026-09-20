@@ -8,10 +8,27 @@ import re
 import logging
 from typing import List, Dict, Any, Optional, Tuple
 
-from ..config import settings
-from ..models import ChatMessageItem, ChatResponse, WeatherResponseModel
-from .weather_service import weather_service
-from .database_service import database_service
+try:
+    from backend.config import settings
+    from backend.models import ChatMessageItem, ChatResponse, WeatherResponseModel
+    from backend.services.weather_service import weather_service
+    from backend.services.database_service import database_service
+except (ImportError, ValueError):
+    try:
+        from ..config import settings
+        from ..models import ChatMessageItem, ChatResponse, WeatherResponseModel
+        from .weather_service import weather_service
+        from .database_service import database_service
+    except (ImportError, ValueError):
+        from config import settings
+        from models import ChatMessageItem, ChatResponse, WeatherResponseModel
+        try:
+            from services.weather_service import weather_service
+            from services.database_service import database_service
+        except (ImportError, ValueError):
+            from weather_service import weather_service
+            from database_service import database_service
+
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +130,8 @@ class AIService:
         user_message: str,
         active_location: Optional[str] = "Ahmedabad",
         conversation_history: Optional[List[ChatMessageItem]] = None,
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
+        persona: Optional[str] = "Meteorologist"
     ) -> ChatResponse:
         """
         Executes end-to-end weather contextual Q&A:
@@ -123,9 +141,11 @@ class AIService:
         4. Logs interaction into database.
         """
         history = conversation_history or []
+        user_persona = (persona or "Meteorologist").strip()
         fallback_loc = (active_location or "").strip()
         if not fallback_loc or fallback_loc.lower() in ["string", "none", "null"]:
             fallback_loc = "Ahmedabad"
+
 
         target_location, intent = self.extract_location_and_intent(user_message, fallback_loc)
 
@@ -184,7 +204,8 @@ Active Advisories: {', '.join([a.title or a.message for a in weather_data.alerts
 
         if self.openai_client:
             try:
-                messages = [{"role": "system", "content": SYSTEM_PROMPT + "\n\n" + context_str}]
+                persona_directive = f"\nACTIVE USER PERSONA: {user_persona}. Tailor your advice and tone specifically to this role (e.g. agricultural/irrigation advice for Farmers, commute/packing for Travelers, fitness/UV for Athletes)."
+                messages = [{"role": "system", "content": SYSTEM_PROMPT + persona_directive + "\n\n" + context_str}]
                 # Add previous conversation history
                 for item in history[-4:]:
                     messages.append({"role": item.role, "content": item.content})
@@ -205,7 +226,8 @@ Active Advisories: {', '.join([a.title or a.message for a in weather_data.alerts
 
         # Fallback Heuristic Generator if OpenAI is not configured or failed
         if not ai_response_text:
-            ai_response_text = self._generate_heuristic_response(user_message, intent, weather_data)
+            ai_response_text = self._generate_heuristic_response(user_message, intent, weather_data, persona=user_persona)
+
 
         # Log conversation turn in database
         try:
@@ -223,9 +245,9 @@ Active Advisories: {', '.join([a.title or a.message for a in weather_data.alerts
             source=source_label
         )
 
-    def _generate_heuristic_response(self, user_query: str, intent: str, weather: WeatherResponseModel) -> str:
+    def _generate_heuristic_response(self, user_query: str, intent: str, weather: WeatherResponseModel, persona: str = "Meteorologist") -> str:
         """
-        Factual rule-based meteorological response generator.
+        Factual rule-based meteorological response generator tailored by user persona.
         Ensures 100% accuracy without hallucinating numbers.
         Supports natural English and Hindi/Hinglish phrasing.
         """
@@ -235,22 +257,59 @@ Active Advisories: {', '.join([a.title or a.message for a in weather_data.alerts
         temp = curr.temperature_c
         cond = curr.condition
         msg_lower = user_query.lower()
+        p_lower = (persona or "Meteorologist").lower()
+        is_farmer = "farmer" in p_lower or "kisan" in p_lower
+        is_traveler = "travel" in p_lower
+        is_athlete = "athlete" in p_lower or "outdoor" in p_lower
 
         # Check if user query is in Hindi/Hinglish
         is_hindi = any(w in msg_lower for w in [
             "hoga", "hogi", "nahi", "kya", "aaj", "barish", "baarish", "me", "mein",
-            "hai", "kaise", "kese", "batao", "barsat", "kapde", "garmi", "thand", "kal", "parso"
+            "hai", "kaise", "kese", "batao", "barsat", "kapde", "garmi", "thand", "kal", "parso",
+            "khet", "fasal", "paani", "sinchai", "khad", "dawai"
         ])
 
         # 1. Handle Greetings (e.g. "hyy", "hii", "hello", "namaste")
         if intent == "greeting":
-            if is_hindi or any(w in msg_lower for w in ["hyy", "hy", "hii", "kaise", "kese"]):
-                return f"Hyy! Hello! 👋 Main WeatherGPT hu. Kaise hain aap? Main aapko kisi bhi city ka live weather aur forecast bata sakta hu. Abhi station {city} ({temp}°C, {cond}) par set hai. Aap pooch sakte hain jaise: '{city} me aaj rain hoga ya nahi?'"
-            return f"Hello! 👋 I am WeatherGPT, your climate assistant. Currently monitoring {city} at {temp}°C with {cond.lower()} skies. How can I help you with your weather forecast today?"
+            if is_farmer:
+                if is_hindi or any(w in msg_lower for w in ["hyy", "hy", "hii", "kaise", "kese"]):
+                    return f"Hyy! Ram Ram Kisan Bhai! 👋 Main WeatherGPT hu aapka Krishi Mausam Salahkar. Station abhi {city} ({temp}°C, {cond}) par set hai. Baarish ki sambhavna {rain_p}% hai. Khet me sinchai ya fasal ke baare me pooch sakte hain!"
+                return f"Hello Farmer! 🌾 I am WeatherGPT, your Agricultural Meteorological Advisor. Station monitoring {city} at {temp}°C, humidity {curr.humidity_percent}%, rain chance {rain_p}%. Ask me about irrigation or weather for your crops!"
+            elif is_traveler:
+                if is_hindi or any(w in msg_lower for w in ["hyy", "hy", "hii", "kaise", "kese"]):
+                    return f"Hyy! Namaste Traveler! ✈️ Main WeatherGPT hu aapka Travel & Commute Guide. Abhi {city} me {temp}°C aur {cond.lower()} hai. Trip packing ya delays ke baare me pooch sakte hain!"
+                return f"Hello Traveler! ✈️ I am WeatherGPT, your Trip & Commute Weather Guide. Currently monitoring {city} at {temp}°C with {cond.lower()} skies. Ask me about travel delays, packing essentials, or transit safety!"
+            elif is_athlete:
+                if is_hindi or any(w in msg_lower for w in ["hyy", "hy", "hii", "kaise", "kese"]):
+                    return f"Hyy! Hello Athlete! 🏃 Main WeatherGPT Outdoor & Fitness Advisor hu. {city} me taapman {temp}°C aur UV Index {curr.uv_index} hai. Running, cycling ya workout timing ke baare me pooch sakte hain!"
+                return f"Hello Athlete! 🏃 I am WeatherGPT Outdoor & Fitness Advisor. Currently {temp}°C in {city} with UV Index {curr.uv_index} ({curr.uv_level}). Ready to plan your workout or running schedule!"
+            else:
+                if is_hindi or any(w in msg_lower for w in ["hyy", "hy", "hii", "kaise", "kese"]):
+                    return f"Hyy! Hello! 👋 Main WeatherGPT hu. Kaise hain aap? Main aapko kisi bhi city ka live weather aur forecast bata sakta hu. Abhi station {city} ({temp}°C, {cond}) par set hai. Aap pooch sakte hain jaise: '{city} me aaj rain hoga ya nahi?'"
+                return f"Hello! 👋 I am WeatherGPT, your climate assistant. Currently monitoring {city} at {temp}°C with {cond.lower()} skies. How can I help you with your weather forecast today?"
 
-        # 2. Handle Rain / Baarish inquiries with direct Yes/No answers
+        # 2. Agricultural & Farming Specific Inquiries
+        if is_farmer or any(w in msg_lower for w in ["fasal", "khet", "sinchai", "irrigation", "crop", "pesticide", "spray", "khad"]):
+            if rain_p >= 40:
+                if is_hindi:
+                    return f"🌾 Kisan Salah ({city}): Aaj baarish ka chance {rain_p}% hai aur condition '{cond}' hai. Khet me sinchai (irrigation) rok dein aur keetnashak spray na karein taaki dawai na bahe."
+                return f"🌾 Farmer Advisory ({city}): Precipitation chance is {rain_p}% ({cond}). Hold off on irrigation and pesticide spraying today as rainfall may wash away agrochemicals."
+            else:
+                if is_hindi:
+                    return f"🌾 Kisan Salah ({city}): Aaj {city} me baarish ki sambhavna sirf {rain_p}% hai. Khet me sinchai (paani dena) aur faslon par spray karne ke liye mausam anukool hai."
+                return f"🌾 Farmer Advisory ({city}): Rain probability is low at {rain_p}% with {cond.lower()} skies. Today is suitable for field irrigation, nutrient spraying, and harvesting."
+
+        # 3. Handle Rain / Baarish inquiries with direct Yes/No answers
         if intent == "rain":
             if rain_p >= 40 or "rain" in cond.lower() or "drizzle" in cond.lower() or "thunder" in cond.lower():
+                if is_farmer:
+                    if is_hindi:
+                        return f"Haan (Yes), {city} me aaj rain (baarish) hone ke aasaar hain ({rain_p}% chance, condition '{cond}')! Kisan bhai khet me sinchai rok dein aur fasal ko surakshit karein."
+                    return f"Yes, rain is expected in {city} today! Precipitation probability is {rain_p}% with '{cond}'. Farmers should postpone irrigation."
+                if is_traveler:
+                    if is_hindi:
+                        return f"Haan (Yes), {city} me aaj rain (baarish) hone ke aasaar hain ({rain_p}%)! Umbrella zaroor sath rakhein aur travel ke liye extra time plan karein."
+                    return f"Yes, rain is expected in {city} today! Probability is {rain_p}% with '{cond}'. Keep an umbrella handy and plan for possible commute delays."
                 if is_hindi:
                     return f"Haan (Yes), {city} me aaj rain (baarish) hone ke aasaar hain! Wahan baarish ka chance {rain_p}% hai aur current condition '{cond}' hai. Bahar nikalte waqt umbrella (chhatri) sath zaroor rakhein."
                 return f"Yes, rain is expected in {city} today! There is a {rain_p}% probability of precipitation with current condition reported as '{cond}'. Carrying an umbrella is strongly recommended."
@@ -259,9 +318,14 @@ Active Advisories: {', '.join([a.title or a.message for a in weather_data.alerts
                     return f"Thodi bohot sambhavna hai: {city} me {rain_p}% chance hai ki halki bochharein ya drizzle ho sakti hai. Savdhani ke liye ek chhota umbrella sath rakh sakte hain."
                 return f"There is a slight chance ({rain_p}%) of isolated showers in {city}. You might want to keep a compact umbrella handy just in case."
             else:
+                if is_farmer:
+                    if is_hindi:
+                        return f"Nahi (No), {city} me aaj rain (baarish) nahi hogi! Wahan baarish ka chance sirf {rain_p}% hai. Fasal me sinchai aur zaroori kaam ke liye mausam bilkul saaf hai."
+                    return f"No, rain is not expected in {city} today ({rain_p}% chance, {cond.lower()}). Conditions are safe for field work and irrigation."
                 if is_hindi:
                     return f"Nahi (No), {city} me aaj rain (baarish) nahi hogi! Wahan baarish ka chance sirf {rain_p}% hai aur aakash me {cond.lower()} rahega. Aap bina umbrella ke aasaani se bahar jaa sakte hain."
                 return f"No, rain is not expected in {city} today. The precipitation probability is very low at {rain_p}%, with {cond.lower()} skies. You can safely leave your umbrella behind!"
+
 
         elif intent == "clothing":
             if temp >= 32:
